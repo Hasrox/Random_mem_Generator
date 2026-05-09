@@ -72,7 +72,8 @@ class MemeComposer:
 
     def compose_and_play(self, template_path: str, top_text: str, bottom_text: str, 
                         sfx_path: str, context: str = "") -> str:
-        """Full meme composition: wrapped text + dynamic scaling + async audio + save."""
+        """Full meme composition: wrapped text + dynamic scaling + async audio + save.
+        NO Windows Photos popup (removed for Gradio-first workflow)."""
         start_time = time.time()
         
         # 1. Load image
@@ -122,12 +123,6 @@ class MemeComposer:
             print(f"🔊 Playing SFX (async): {Path(sfx_path).stem}")
         except Exception as e:
             print(f"⚠️ Audio playback skipped: {e}")
-        
-        # 8. Safe preview
-        try:
-            img.show()
-        except Exception:
-            pass
         
         print(f"✅ Meme composed and saved in {time.time() - start_time:.2f}s → {output_path}")
         return str(output_path)
