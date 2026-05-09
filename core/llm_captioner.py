@@ -6,7 +6,6 @@ from pydantic import BaseModel
 from .history_manager import HistoryManager
 
 class CaptionResponse(BaseModel):
-    """Structured output for meme captions"""
     top: str
     bottom: str
 
@@ -15,7 +14,10 @@ class OllamaCaptioner:
         self.model_name = model_name
         self.history_manager = HistoryManager()
         
-    def _build_system_prompt(self) -> str:
+    def _build_system_prompt(self, custom_prompt: Optional[str] = None) -> str:
+        if custom_prompt and custom_prompt.strip():
+            return custom_prompt.strip()
+        # DEFAULT (original)
         return """You are an expert meme caption writer. Create funny, concise, classic-style meme text.
 Rules:
 - Top text: Setup or situation (short, punchy, 3-10 words)
@@ -36,14 +38,14 @@ Rules:
         prompt += "\nGenerate ONE new funny meme caption. Respond with valid JSON ONLY: {\"top\": \"...\", \"bottom\": \"...\"}"
         return prompt
 
-    def generate_caption(self, context: str = "general humor", template_id: Optional[str] = None) -> Dict:
-        """Generate top and bottom text using Ollama with structured JSON output."""
+    def generate_caption(self, context: str = "general humor", template_id: Optional[str] = None, system_prompt: Optional[str] = None) -> Dict:
+        """Generate top and bottom text. system_prompt=None or empty = use default."""
         start_time = time.time()
         
         recent_history = self.history_manager.get_recent_history(limit=4)
         
         messages = [
-            {"role": "system", "content": self._build_system_prompt()},
+            {"role": "system", "content": self._build_system_prompt(system_prompt)},
             {"role": "user", "content": self._build_user_prompt(context, recent_history, template_id)}
         ]
         
