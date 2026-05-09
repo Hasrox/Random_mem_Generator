@@ -3,7 +3,7 @@ import pygame
 from pathlib import Path
 from datetime import datetime
 import time
-from typing import Dict, List, Optional
+from typing import List
 
 class MemeComposer:
     def __init__(self, output_dir: str = "generated_memes"):
@@ -47,21 +47,23 @@ class MemeComposer:
                                fill: str = "white", stroke_fill: str = "black", stroke_width: int = 4):
         """Draw text with black outline for classic meme look."""
         x, y = position
+        # Draw stroke
         for adj in range(-stroke_width, stroke_width + 1):
             for adj2 in range(-stroke_width, stroke_width + 1):
                 draw.text((x + adj, y + adj2), text, font=font, fill=stroke_fill)
+        # Draw main text
         draw.text((x, y), text, font=font, fill=fill)
 
-        def _calculate_font_size(self, width: int, height: int, longest_line: str) -> int:
+    def _calculate_font_size(self, width: int, height: int, longest_line: str) -> int:
         """Highly dynamic font sizing that adapts perfectly to any template resolution."""
         min_dim = min(width, height)
         base_size = int(min_dim * 0.088)                    # ~8.8% of smallest dimension
         
-        # Text length penalty (stronger for very long wrapped lines)
+        # Text length penalty
         length_factor = max(1.0, len(longest_line) / 19)
         size = int(base_size / length_factor)
         
-        # Dynamic bounds that scale with the actual image size
+        # Dynamic bounds that scale with image size
         min_size = max(26, int(min_dim * 0.04))
         max_size = min(170, int(min_dim * 0.23))
         
@@ -70,7 +72,7 @@ class MemeComposer:
 
     def compose_and_play(self, template_path: str, top_text: str, bottom_text: str, 
                         sfx_path: str, context: str = "") -> str:
-        """Full meme composition with improved dynamic font scaling."""
+        """Full meme composition: wrapped text + dynamic scaling + async audio + save."""
         start_time = time.time()
         
         # 1. Load image
@@ -82,16 +84,15 @@ class MemeComposer:
         top_lines = self._wrap_text(top_text)
         bottom_lines = self._wrap_text(bottom_text)
         
-        # 3. Dynamic font sizing (now uses full image dimensions)
+        # 3. Dynamic font sizing
         all_lines = top_lines + bottom_lines
         longest_line = max(all_lines, key=len) if all_lines else ""
         font_size = self._calculate_font_size(width, height, longest_line)
         font = self._get_font(font_size)
         
-        # ... (rest of the method unchanged — multi-line drawing, async audio, save, show, etc.)
+        line_height = font_size * 1.12   # Slight spacing for readability
         
         # 4. Draw top text (multi-line, centered)
-        line_height = font_size * 1.1
         top_start_y = int(height * 0.08)
         for i, line in enumerate(top_lines):
             bbox = draw.textbbox((0, 0), line, font=font)
@@ -122,9 +123,9 @@ class MemeComposer:
         except Exception as e:
             print(f"⚠️ Audio playback skipped: {e}")
         
-        # 8. Optional safe preview
+        # 8. Safe preview
         try:
-            img.show()  # Windows-safe — no crash if viewer unavailable
+            img.show()
         except Exception:
             pass
         
