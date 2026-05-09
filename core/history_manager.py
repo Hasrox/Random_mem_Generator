@@ -1,13 +1,14 @@
 import sqlite3
 from pathlib import Path
 from datetime import datetime
-from typing import List, Dict
+from typing import Dict, List
 
 class HistoryManager:
     def __init__(self):
         self.db_path = Path("data/meme_generator.db")
-        self.db_path.parent.mkdir(parents=True, exist_ok=True)  # Ensure data/ folder exists
-        self.conn = sqlite3.connect(str(self.db_path))
+        self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        # FIXED: thread safety for Gradio
+        self.conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
         self._init_history_table()
 
     def _init_history_table(self):
